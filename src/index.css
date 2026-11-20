@@ -1,0 +1,44 @@
+@import "tailwindcss";
+@import "@fontsource-variable/geist";
+@import "@fontsource-variable/geist-mono";
+
+/* Tailwind v4: make `dark:` follow the .dark class on <html> (Vengeance UI relies on it). */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Design tokens. The shadcn-style names (background, foreground, border, ring)
+   are what Vengeance UI components use, e.g. `bg-background`. */
+:root {
+  --background: #0a0a0f;
+  --foreground: #ededf2;
+  --muted: #8b8b9a;
+  --border: rgb(255 255 255 / 0.1);
+  --ring: #60a5fa;
+  --panel: rgb(16 16 24 / 0.72);
+  --stripe-color: #000; /* used by Animated Rays */
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+  --color-ring: var(--ring);
+  --color-panel: var(--panel);
+  --font-sans: "Geist Variable", system-ui, sans-serif;
+  --font-mono: "Geist Mono Variable", ui-monospace, monospace;
+}
+
+body {
+  @apply bg-background text-foreground font-sans antialiased min-h-screen;
+}
+
+/* Keyframes used by Animated Rays (from Vengeance UI's globals.css). */
+@keyframes aurora-smooth-bg {
+  from { background-position: 50% 50%, 50% 50%; }
+  to   { background-position: 350% 50%, 350% 50%; }
+}
+.animate-aurora-bg { animation: aurora-smooth-bg 60s linear infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
