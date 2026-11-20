@@ -42,6 +42,9 @@ export default function ActivityPanel({ activity, error }) {
             <li key={i} className="flex flex-wrap items-baseline gap-x-1.5 py-2">
               <span className="text-foreground/80">{e.text}</span>
               <a href={e.repoUrl} target="_blank" rel="noopener noreferrer" className="text-sky-400 hover:underline">{e.repo}</a>
+              {e.count > 1 && (
+                <span className="rounded-full bg-white/10 px-1.5 font-mono text-[11px] text-foreground/70">×{e.count}</span>
+              )}
               <span className="ml-auto text-xs text-muted">{e.when}</span>
             </li>
           ))}

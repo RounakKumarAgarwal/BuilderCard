@@ -100,8 +100,25 @@ export function summarizeActivity(events, { days = 30, now = Date.now(), recentL
     daily,
     activeDays: daily.filter((n) => n > 0).length,
     totals,
-    recent: events.slice(0, recentLimit).map((e) => describeEvent(e, now)),
+    recent: groupRecent(events, now).slice(0, recentLimit),
   };
+}
+
+/**
+ * Latest events as sentences, newest first, with back-to-back repeats merged:
+ * three "Pushed to torvalds/linux" in a row become one item with count: 3.
+ * (Real feeds aren't always in time order, so we sort first; copy, no mutation.)
+ */
+export function groupRecent(events, now = Date.now()) {
+  const sorted = [...events].sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at));
+  const items = [];
+  for (const e of sorted) {
+    const d = describeEvent(e, now);
+    const last = items.at(-1);
+    if (last && last.text === d.text && last.repo === d.repo) last.count += 1;
+    else items.push({ ...d, count: 1 });
+  }
+  return items;
 }
 
 /** One event → { text, repo, repoUrl, when }. Unknown types degrade gracefully. */
@@ -125,7 +142,11 @@ export function describeEvent(e, now = Date.now()) {
     case 'ForkEvent':          text = 'Forked'; break;
     case 'ReleaseEvent':       text = `Released ${p.release?.tag_name || 'a version'} of`; break;
     case 'PublicEvent':        text = 'Open-sourced'; break;
-    default:                   text = `${e.type.replace(/Event$/, '')} in`;
+    case 'MemberEvent':        text = 'Added a collaborator to'; break;
+    case 'GollumEvent':        text = 'Edited the wiki of'; break;
+    case 'CommitCommentEvent': text = 'Commented on a commit in'; break;
+    case 'PullRequestReviewCommentEvent': text = 'Commented on a pull request in'; break;
+    default:                   text = 'Activity in';
   }
   const repo = e.repo?.name || 'unknown repo';
   return {
