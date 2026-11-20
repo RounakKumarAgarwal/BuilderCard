@@ -5,6 +5,6 @@ import { fileURLToPath, URL } from 'node:url'
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
-  // "@/..." = "src/...", the import style Vengeance UI components expect
+
   resolve: { alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) } },
 })

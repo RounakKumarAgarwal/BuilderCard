@@ -1,4 +1,3 @@
-// Stacked bar + legend. Each segment animates its width from 0.
 import { motion } from 'framer-motion';
 import { langColor } from '@/lib/utils';
 

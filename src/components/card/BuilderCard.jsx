@@ -1,5 +1,3 @@
-// Composes the card from its sections. Sections fade in one after another
-// (framer-motion "stagger": the parent orchestrates its children's timing).
 import { motion } from 'framer-motion';
 import ProfileHeader from './ProfileHeader';
 import StatGrid from './StatGrid';

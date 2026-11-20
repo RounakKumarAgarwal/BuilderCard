@@ -1,6 +1,5 @@
 // From Vengeance UI (MIT) — https://www.vengenceui.com/components/animated-rays
-// Converted from TSX to JSX. Change: no `mounted` guard (that's for Next.js SSR;
-// a Vite SPA always renders in the browser), dark mode read on first render.
+
 import { useEffect, useState } from 'react';
 import { cn } from '@/lib/utils';
 

@@ -1,9 +1,7 @@
-// Shown before the first search, so the page isn't empty:
-// a quick preview of what the card will contain. Purely decorative data.
 import { motion } from 'framer-motion';
 
 const LANGS = [['#3178c6', 46], ['#f1e05a', 28], ['#00ADD8', 16], ['#dea584', 10]];
-// A fixed pseudo-random pattern, so the strip looks the same every visit.
+
 const HEAT = [0, 1, 0, 2, 3, 1, 0, 0, 2, 4, 3, 1, 0, 1, 2, 0, 0, 3, 4, 2, 1, 0, 1, 3, 2, 0, 2, 4, 3, 1];
 const LEVELS = ['bg-white/[0.06]', 'bg-emerald-900', 'bg-emerald-700', 'bg-emerald-500', 'bg-emerald-400'];
 

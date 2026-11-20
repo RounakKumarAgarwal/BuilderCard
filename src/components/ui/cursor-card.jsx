@@ -1,7 +1,5 @@
-// From Vengeance UI (MIT) — https://www.vengenceui.com/components/cursor-card
-// Converted from TSX to JSX. Changes: target/rel on the link, lazy image, alt text,
-// no `mounted` guard (only needed for Next.js server rendering),
-// preview starts at the cursor instead of springing from the corner.
+// From Vengeance UI — https://www.vengenceui.com/components/cursor-card , this is added as they have policy.
+
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, useMotionValue, useSpring, AnimatePresence } from 'framer-motion';
@@ -17,12 +15,10 @@ export function CursorCard({ children, image, description, href = '#', className
   const springY = useSpring(y, springConfig);
 
   const handleMouseMove = (e) => {
-    x.set(e.clientX - 120); // centre the 240px preview on the cursor
-    y.set(e.clientY + 20);  // and sit it just below
+    x.set(e.clientX - 120);
+    y.set(e.clientY + 20);
   };
 
-  // Added: on enter, jump straight to the cursor (otherwise the preview
-  // springs in from the top-left corner of the screen).
   const handleMouseEnter = (e) => {
     springX.jump(e.clientX - 120);
     springY.jump(e.clientY + 20);

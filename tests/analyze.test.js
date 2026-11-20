@@ -43,7 +43,7 @@ test('summarizeLanguages counts primary languages and folds the tail into Other'
   const langs = summarizeLanguages(repos, 3);
   assert.deepEqual(langs.map((l) => l.name), ['JS', 'Py', 'Go', 'Other']);
   assert.equal(langs[0].percent, 33.3);
-  assert.equal(langs.at(-1).count, 3); // Rust, C, Zig
+  assert.equal(langs.at(-1).count, 3);
   assert.ok(!langs.some((l) => l.name === 'Haskell'));
 });
 
@@ -64,15 +64,15 @@ test('summarizeActivity buckets by day and counts types inside the window', () =
     ev('PullRequestEvent', '2026-11-19T10:00:00', { action: 'opened' }),
     ev('PullRequestEvent', '2026-11-19T11:00:00', { action: 'closed' }),
     ev('IssuesEvent', '2026-11-01T10:00:00', { action: 'opened' }),
-    ev('PushEvent', '2026-09-01T10:00:00'), // outside 30 days
+    ev('PushEvent', '2026-09-01T10:00:00'),
   ];
   const a = summarizeActivity(events, { now });
   assert.equal(a.daily.length, 30);
-  assert.equal(a.daily[29], 2); // today
-  assert.equal(a.daily[28], 2); // yesterday
+  assert.equal(a.daily[29], 2);
+  assert.equal(a.daily[28], 2);
   assert.equal(a.activeDays, 3);
   assert.deepEqual(a.totals, { pushes: 2, pullRequests: 1, issues: 1, reviews: 0 });
-  assert.equal(a.recent.length, 5); // today's two pushes merge into one item
+  assert.equal(a.recent.length, 5);
   assert.equal(a.recent[0].count, 2);
 });
 
@@ -106,7 +106,7 @@ test('groupRecent sorts newest first and merges back-to-back repeats', () => {
   const ev = (type, iso, repo = 'u/r') => ({ type, created_at: iso, repo: { name: repo }, payload: {} });
   const items = groupRecent([
     ev('PushEvent', '2026-11-19T10:00:00Z'),
-    ev('WatchEvent', '2026-11-20T11:00:00Z', 'x/y'), // newest, but listed 2nd (real feeds do this)
+    ev('WatchEvent', '2026-11-20T11:00:00Z', 'x/y'),
     ev('PushEvent', '2026-11-19T09:00:00Z'),
     ev('PushEvent', '2026-11-18T09:00:00Z', 'u/other'),
   ], now);
@@ -115,5 +115,5 @@ test('groupRecent sorts newest first and merges back-to-back repeats', () => {
     ['Pushed to', 'u/r', 2],
     ['Pushed to', 'u/other', 1],
   ]);
-  assert.equal(items[1].when, '1d ago'); // time of the most recent in the group
+  assert.equal(items[1].when, '1d ago');
 });

@@ -1,5 +1,3 @@
-// The username input + "Build card" button + example chips.
-// It's a controlled input: React state (`value`) is the single source of truth.
 import { useState } from 'react';
 import AnimatedButton from '@/components/ui/animated-button';
 
@@ -9,8 +7,8 @@ export default function SearchForm({ initialValue, onSearch, busy }) {
   const [value, setValue] = useState(initialValue);
 
   const submit = (e) => {
-    e.preventDefault(); // stop the browser's full-page form submit
-    onSearch(value.trim().replace(/^@/, '')); // accept "@octocat" too
+    e.preventDefault();
+    onSearch(value.trim().replace(/^@/, ''));
   };
 
   return (

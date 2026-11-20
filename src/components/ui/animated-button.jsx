@@ -1,5 +1,5 @@
 // From Vengeance UI (MIT) — https://www.vengenceui.com/components/my-animated-button
-// Converted from TSX to JSX; logic unchanged.
+
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
@@ -19,7 +19,7 @@ export default function AnimatedButton({ children = 'Browse Components', classNa
         className,
       )}
     >
-      {/* Text with a moving shine mask */}
+
       <motion.span
         className="tracking-wide font-light flex items-center justify-center h-full w-full relative z-10"
         style={{
@@ -32,7 +32,7 @@ export default function AnimatedButton({ children = 'Browse Components', classNa
       >
         {children}
       </motion.span>
-      {/* Border shine */}
+
       <motion.span
         className="block absolute inset-0 rounded-md p-px"
         style={{

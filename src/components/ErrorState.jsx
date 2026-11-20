@@ -1,4 +1,3 @@
-// Turns a typed GitHubError into a friendly, actionable message.
 import { motion } from 'framer-motion';
 
 function describe(error, username) {

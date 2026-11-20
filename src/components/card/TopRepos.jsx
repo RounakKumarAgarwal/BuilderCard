@@ -1,5 +1,3 @@
-// Grid of the best repos. Hovering a repo name (Vengeance UI CursorCard)
-// shows GitHub's social preview image for that repo, following the cursor.
 import { CursorCard } from '@/components/ui/cursor-card';
 import { relativeTime } from '@/lib/analyze';
 import { formatCount, langColor } from '@/lib/utils';
@@ -13,7 +11,7 @@ export default function TopRepos({ repos, truncated }) {
     <>
       <ul className="grid gap-3 sm:grid-cols-2">
         {repos.map((r) => {
-          const fullName = new URL(r.url).pathname.slice(1); // "owner/repo"
+          const fullName = new URL(r.url).pathname.slice(1);
           return (
             <li key={r.url} className="flex flex-col rounded-lg border border-border bg-white/[0.02] p-4 transition hover:border-white/25">
               <div className="flex flex-wrap items-center gap-2">

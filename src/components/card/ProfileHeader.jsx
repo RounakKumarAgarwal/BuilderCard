@@ -1,6 +1,3 @@
-// Avatar, name, handle, bio and meta row.
-// React escapes text automatically, so a malicious bio can't inject HTML.
-// hrefs are NOT protocol-checked by React, hence safeUrl() for the website.
 import { safeUrl } from '@/lib/utils';
 
 export default function ProfileHeader({ profile: p }) {

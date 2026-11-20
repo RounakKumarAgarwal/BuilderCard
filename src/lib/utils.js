@@ -1,16 +1,10 @@
-// Small UI helpers shared by components.
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
-/** Merge Tailwind classes; later classes win over conflicting earlier ones. (Used by Vengeance UI.) */
 export function cn(...inputs) {
   return twMerge(clsx(inputs));
 }
 
-/**
- * Only allow http(s) links. Blocks `javascript:` URLs in the user-controlled
- * "website" field. React escapes TEXT automatically, but not href protocols.
- */
 export function safeUrl(raw) {
   if (!raw) return null;
   const withProtocol = /^https?:\/\//i.test(raw) ? raw : `https://${raw}`;
@@ -25,7 +19,6 @@ export function safeUrl(raw) {
 const compact = new Intl.NumberFormat('en', { notation: 'compact', maximumFractionDigits: 1 });
 export const formatCount = (n) => compact.format(n);
 
-// GitHub's colours for common languages; others get a stable hash-based colour.
 const LANG_COLORS = {
   JavaScript: '#f1e05a', TypeScript: '#3178c6', Python: '#3572A5', Java: '#b07219',
   Go: '#00ADD8', Rust: '#dea584', C: '#555555', 'C++': '#f34b7d', 'C#': '#178600',

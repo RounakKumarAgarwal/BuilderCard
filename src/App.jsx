@@ -1,5 +1,3 @@
-// App: owns the current username (synced with ?u= in the URL) and
-// picks which state to show: nothing, loading, error, or the card.
 import { useState } from 'react';
 import { AnimatedRays } from '@/components/ui/animated-rays';
 import SearchForm from '@/components/SearchForm';
@@ -9,7 +7,6 @@ import ErrorState from '@/components/ErrorState';
 import BuilderCard from '@/components/card/BuilderCard';
 import { useBuilder } from '@/hooks/useBuilder';
 
-// Read ?u= once on first render, so /?u=torvalds deep-links to a card.
 const initialUser = new URLSearchParams(window.location.search).get('u') || '';
 
 export default function App() {
@@ -19,7 +16,7 @@ export default function App() {
 
   const search = (name) => {
     setUsername(name);
-    // Update the URL without reloading, so the card is shareable.
+
     const url = new URL(window.location.href);
     url.searchParams.set('u', name);
     window.history.replaceState(null, '', url);
@@ -31,13 +28,12 @@ export default function App() {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      /* clipboard blocked: the URL bar still has the link */
     }
   };
 
   return (
     <>
-      {/* Vengeance UI aurora background, fixed behind everything */}
+
       <AnimatedRays className="pointer-events-none fixed inset-0 -z-10 h-screen opacity-70" />
 
       <main className="mx-auto max-w-3xl px-5 pb-10 pt-14 sm:pt-20">
@@ -53,7 +49,6 @@ export default function App() {
 
         <SearchForm initialValue={initialUser} onSearch={search} busy={status === 'loading'} />
 
-        {/* aria-live: screen readers announce the card or error when it appears */}
         <div aria-live="polite" className="mt-8">
           {status === 'idle' && <IdleState />}
           {status === 'loading' && <LoadingState />}

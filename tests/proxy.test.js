@@ -1,5 +1,3 @@
-// Tests the Vercel function with a fake req/res and a stubbed global fetch,
-// so no network or Vercel account is needed.
 import { test, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
 import handler from '../api/github.js';

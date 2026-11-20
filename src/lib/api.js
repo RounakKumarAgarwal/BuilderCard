@@ -1,28 +1,18 @@
-// api.js — everything that talks to GitHub lives here.
-// Responsibilities: pick a route (proxy or direct), turn HTTP failures into
-// typed errors the UI can explain, and cache results to save rate limit.
-
 const GITHUB = 'https://api.github.com';
-const CACHE_TTL_MS = 10 * 60 * 1000; // 10 minutes
-const MAX_REPO_PAGES = 3;            // up to 300 repos (see README trade-offs)
+const CACHE_TTL_MS = 10 * 60 * 1000;
+const MAX_REPO_PAGES = 3;
 
-/** A typed error: `kind` drives which message the UI shows. */
 export class GitHubError extends Error {
   constructor(kind, message, extra = {}) {
     super(message);
     this.name = 'GitHubError';
-    this.kind = kind; // 'not_found' | 'rate_limited' | 'network' | 'http'
+    this.kind = kind;
     Object.assign(this, extra);
   }
 }
 
-// Last known rate-limit numbers, shown in the footer.
 export const rateLimit = { remaining: null, limit: null, resetAt: null };
 
-// Route selection. We first try our own serverless proxy (/api/github),
-// which adds a token → 5,000 req/hour instead of 60. If the proxy isn't
-// there (opened as a file, local static server, Netlify…), we switch to
-// calling GitHub directly and remember that choice for the session.
 let mode = 'proxy';
 
 async function rawFetch(endpoint, username, page, signal) {
@@ -30,10 +20,10 @@ async function rawFetch(endpoint, username, page, signal) {
     try {
       const qs = new URLSearchParams({ endpoint, username, page: String(page) });
       const res = await fetch(`/api/github?${qs}`, { signal });
-      // Our function stamps this header; a random 404 page won't have it.
+
       if (res.headers.get('x-builder-proxy')) return res;
     } catch (err) {
-      if (err.name === 'AbortError') throw err; // user started a new search
+      if (err.name === 'AbortError') throw err;
     }
     mode = 'direct';
   }
@@ -51,7 +41,6 @@ function directUrl(endpoint, username, page) {
   throw new Error(`Unknown endpoint: ${endpoint}`);
 }
 
-/** One request → parsed JSON, or a GitHubError. Results are cached. */
 async function request(endpoint, username, { page = 1, signal } = {}) {
   const key = `bc:${endpoint}:${username.toLowerCase()}:${page}`;
   const cached = readCache(key);
@@ -73,11 +62,10 @@ async function request(endpoint, username, { page = 1, signal } = {}) {
     return data;
   }
 
-  // ---- error classification ----
   if (res.status === 404) {
     throw new GitHubError('not_found', `No GitHub user named "${username}".`);
   }
-  // GitHub signals rate limits with 403 or 429, plus remaining=0 or Retry-After.
+
   const remaining = res.headers.get('x-ratelimit-remaining');
   const retryAfter = res.headers.get('retry-after');
   if ((res.status === 403 || res.status === 429) && (remaining === '0' || retryAfter)) {
@@ -87,16 +75,10 @@ async function request(endpoint, username, { page = 1, signal } = {}) {
     throw new GitHubError('rate_limited', 'GitHub rate limit reached.', { resetAt });
   }
   let detail = '';
-  try { detail = (await res.json()).message || ''; } catch { /* body wasn't JSON */ }
+  try { detail = (await res.json()).message || ''; } catch {  }
   throw new GitHubError('http', `GitHub returned ${res.status}${detail ? `: ${detail}` : ''}.`, { status: res.status });
 }
 
-/**
- * Fetch everything the card needs.
- * 1. Profile FIRST, alone: a wrong username fails with 1 request, not 3.
- * 2. Then repo pages + events IN PARALLEL (Promise.all / allSettled).
- * 3. Events are optional: if they fail, the card still renders with a note.
- */
 export async function fetchBuilder(username, { signal } = {}) {
   const profile = await request('profile', username, { signal });
 
@@ -110,7 +92,7 @@ export async function fetchBuilder(username, { signal } = {}) {
     request('events', username, { signal }),
   ]);
 
-  if (reposResult.status === 'rejected') throw reposResult.reason; // repos are essential
+  if (reposResult.status === 'rejected') throw reposResult.reason;
   if (eventsResult.status === 'rejected' && eventsResult.reason?.name === 'AbortError') {
     throw eventsResult.reason;
   }
@@ -126,15 +108,12 @@ export async function fetchBuilder(username, { signal } = {}) {
 
 function trackRateLimit(headers) {
   const remaining = headers.get('x-ratelimit-remaining');
-  if (remaining === null) return; // cached CDN response may omit it
+  if (remaining === null) return;
   rateLimit.remaining = Number(remaining);
   rateLimit.limit = Number(headers.get('x-ratelimit-limit'));
   rateLimit.resetAt = new Date(Number(headers.get('x-ratelimit-reset')) * 1000);
 }
 
-// ---- tiny sessionStorage cache with expiry ----
-// sessionStorage can throw (private mode, quota), so every access is guarded:
-// a broken cache must never break the app.
 function readCache(key) {
   try {
     const raw = sessionStorage.getItem(key);
@@ -154,6 +133,5 @@ function writeCache(key, data) {
   try {
     sessionStorage.setItem(key, JSON.stringify({ at: Date.now(), data }));
   } catch {
-    /* quota full or storage disabled: just skip caching */
   }
 }

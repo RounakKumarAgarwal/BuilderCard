@@ -7,7 +7,7 @@ Enter a GitHub username and get a **builder card**: who they are, their best rep
 
 ![Builder Card for RounakKumarAgarwal](docs/screenshot.jpg)
 
-<sub>Screenshot uses real GitHub data; the avatar is replaced with a placeholder.</sub>
+<sub>Screenshot of my own card, with real GitHub data.</sub>
 
 ---
 

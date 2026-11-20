@@ -1,4 +1,3 @@
-// 30-day activity strip (like GitHub's graph, one row) + latest events.
 import { motion } from 'framer-motion';
 import { Empty } from './LanguageBar';
 
@@ -16,7 +15,7 @@ export default function ActivityPanel({ activity, error }) {
     <>
       <div role="img" aria-label="Activity over the last 30 days" className="grid grid-cols-[repeat(30,minmax(0,1fr))] gap-1">
         {activity.daily.map((n, i) => {
-          const level = n === 0 ? 0 : Math.ceil((n / max) * 4); // 0–4, like GitHub
+          const level = n === 0 ? 0 : Math.ceil((n / max) * 4);
           const daysAgo = activity.daily.length - 1 - i;
           return (
             <motion.span
