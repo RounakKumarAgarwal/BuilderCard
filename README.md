@@ -120,4 +120,4 @@ UI components from [Vengeance UI](https://github.com/Ashutoshx7/VengenceUI) (MIT
 
 ## Time taken
 
-~X hours.
+4–6 hours.
