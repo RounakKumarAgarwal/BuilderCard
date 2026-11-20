@@ -2,7 +2,7 @@
 
 Enter a GitHub username, get a **builder card**: profile, top repositories, main languages and the last 30 days of activity.
 
-**Live:** https://YOUR-APP.vercel.app · **Example:** https://YOUR-APP.vercel.app/?u=torvalds
+**Live:** https://builder-card-two.vercel.app · **Example:** https://builder-card-two.vercel.app/?u=torvalds
 
 <!-- After deploying, save a screenshot as docs/screenshot.png and add: ![screenshot](docs/screenshot.png) -->
 
