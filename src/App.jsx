@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { AnimatedRays } from '@/components/ui/animated-rays';
 import SearchForm from '@/components/SearchForm';
 import LoadingState from '@/components/LoadingState';
+import IdleState from '@/components/IdleState';
 import ErrorState from '@/components/ErrorState';
 import BuilderCard from '@/components/card/BuilderCard';
 import { useBuilder } from '@/hooks/useBuilder';
@@ -54,6 +55,7 @@ export default function App() {
 
         {/* aria-live: screen readers announce the card or error when it appears */}
         <div aria-live="polite" className="mt-8">
+          {status === 'idle' && <IdleState />}
           {status === 'loading' && <LoadingState />}
           {status === 'error' && <ErrorState error={error} username={username} onRetry={retry} />}
           {status === 'success' && (
