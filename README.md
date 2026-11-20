@@ -1,102 +1,123 @@
 # 🛠️ Builder Card
 
-Enter a GitHub username, get a **builder card**: profile, top repositories, main languages and the last 30 days of activity.
+Enter a GitHub username and get a **builder card**: who they are, their best repositories, the languages they build in, and what they've been doing over the last 30 days.
 
-**Live:** https://builder-card-two.vercel.app · **Example:** https://builder-card-two.vercel.app/?u=torvalds
+**🔗 Live:** https://builder-card-two.vercel.app
+**👉 Try it:** [torvalds](https://builder-card-two.vercel.app/?u=torvalds) · [gaearon](https://builder-card-two.vercel.app/?u=gaearon) · [sindresorhus](https://builder-card-two.vercel.app/?u=sindresorhus) · [vercel (an org)](https://builder-card-two.vercel.app/?u=vercel)
 
-<!-- After deploying, save a screenshot as docs/screenshot.png and add: ![screenshot](docs/screenshot.png) -->
+![Builder Card for torvalds](docs/screenshot.jpg)
+
+<sub>Screenshot uses real GitHub data; the avatar is replaced with a placeholder.</sub>
+
+---
+
+## What's on the card
+
+| Section | How it's decided |
+|---|---|
+| **Profile** | Name, handle, bio, company, location, website, join date, plus repo / star / follower counts |
+| **Top repositories** | Own repos only (forks show other people's work), ranked by **stars → forks → most recently pushed**. Hover a name to see GitHub's preview image. |
+| **Main languages** | Each own repo's primary language, as a share of all their repos. Top 5 + "Other". |
+| **Recent activity** | A 30-day heat strip, totals (pushes, PRs, issues, reviews) and the latest events in plain English. Back-to-back repeats are merged ("Pushed to torvalds/linux ×24"). |
+
+Before you search, the page shows a short preview of what the card contains. Every card has a shareable URL: `/?u=username`.
 
 ## Stack
 
-React 19 · Vite · Tailwind CSS v4 · Framer Motion · [Vengeance UI](https://www.vengenceui.com) components · one Vercel serverless function
+React 19 · Vite · Tailwind CSS v4 · Framer Motion · [Vengeance UI](https://www.vengenceui.com) · one Vercel serverless function. No backend database and no API keys in the browser.
 
-## Features
+## How it works
 
-- **Top repos** ranked by stars → forks → recency, with forks excluded (they show other people's work). Hover a repo name to see GitHub's preview image for it.
-- **Main languages**: share of the user's own repos per primary language, top 5 + "Other", as an animated bar
-- **Recent activity**: a 30-day heat strip, totals (pushes, PRs, issues, reviews) and the latest events as plain sentences
-- **Shareable links**: `/?u=username` opens a card directly
-- **Error handling** for every failure I could think of (see below)
-- Responsive, keyboard-accessible, `aria-live` announcements, respects `prefers-reduced-motion`
+```
+username ──► validate (no request if invalid)
+         ──► GET /users/:name                      1 request; a typo stops here (404)
+         ──► GET /users/:name/repos  (1–3 pages) ┐  in parallel
+             GET /users/:name/events/public      ┘
+         ──► analyze.js (pure functions) ──► React components
+```
 
-## Architecture
+- **Profile first, alone.** A wrong username costs one request instead of three. The profile also tells us how many repo pages to fetch.
+- **Repos and events in parallel** (`Promise.allSettled`). Repos are required; **events are optional**, so if they fail the card still renders with a note.
+- **All logic is in plain JavaScript** (`src/lib/`). It has no React in it and is unit-tested. Components only display ready-made values.
+
+### Project structure
 
 ```
 src/
-  lib/analyze.js       PURE functions: ranking, language stats, activity summary (unit-tested)
+  lib/analyze.js       pure functions: ranking, languages, activity, event grouping
   lib/api.js           GitHub access: proxy/direct routing, typed errors, caching
   lib/utils.js         cn(), safeUrl(), number formatting, language colours
   hooks/useBuilder.js  username → { status, data, error }; cancels stale requests
-  components/
-    SearchForm, LoadingState, ErrorState
+  components/          SearchForm, IdleState, LoadingState, ErrorState
     card/              BuilderCard → ProfileHeader, StatGrid, LanguageBar, TopRepos, ActivityPanel
-    ui/                Vengeance UI: animated-rays, animated-button, cursor-card, kinetic-text-loader
+    ui/                Vengeance UI components (animated rays, button, cursor card, loader)
   App.jsx              URL sync (?u=) and which state to show
-api/github.js          Vercel serverless proxy (token + edge caching)
-tests/                 node:test unit tests (no network needed)
+api/github.js          Vercel serverless proxy (validation, caching, optional token)
+tests/                 node:test unit tests, no network needed
 ```
-
-The data layer (`lib/`) has no React in it. It's plain JavaScript that can be tested with `node --test`, and components only receive ready-to-show values.
-
-### Requests per card
-
-1. `GET /users/:name` runs first and **alone**, so a wrong username costs 1 request instead of 3.
-2. Then `GET /users/:name/repos` (up to 3 pages) and `GET /users/:name/events/public` run **in parallel**.
-3. Activity is optional. If the events call fails, the card still renders with a note.
 
 ## Error handling
 
 | Situation | What the user sees |
 |---|---|
-| Invalid username (`-abc`, spaces, >39 chars) | Caught **before** any request, with an explanation of the rules |
-| User doesn't exist (404) | "User not found, check the spelling?" |
-| Rate limit (403/429 with `x-ratelimit-remaining: 0` or `Retry-After`) | The local time it resets, minutes remaining, and a Try again button |
+| Invalid username (`-abc`, spaces, >39 chars) | Caught **before** any request, with the username rules explained |
+| User doesn't exist (404) | "User not found. Check the spelling?" |
+| **Rate limit** (403/429 + `x-ratelimit-remaining: 0` or `Retry-After`) | The local time it resets, minutes remaining, and a **Try again** button |
 | Network down | "Can't reach GitHub" + Try again |
-| Events endpoint fails | Card renders, activity section shows a note |
+| Activity request fails | Card still renders; the activity section explains |
 | No repos / no activity / only forks | Friendly empty states; forks used as a fallback |
-| Two searches in quick succession | The effect cleanup aborts the older request (`AbortController`), so it can't overwrite the newer card |
+| Two searches in quick succession | The older request is aborted (`AbortController` in the effect cleanup), so a slow response can't overwrite the newer card |
+| Organisation accounts | Supported, and labelled "Organization" |
 
-### Rate-limit strategy
+### Staying under GitHub's rate limit
 
-1. **Serverless proxy + token**: 5,000 requests/hour instead of 60/hour per IP. The token stays server-side.
-2. **Edge cache**: successful responses are cached by Vercel's CDN for 5 minutes. Errors are never cached.
-3. **Browser cache**: `sessionStorage` with a 10-minute TTL, so re-opening a card costs 0 requests.
-4. **Visible quota** in the footer.
-5. **Graceful fallback**: if the proxy isn't available (`npm run dev`, or another host), the app calls GitHub directly.
+Unauthenticated GitHub API calls are limited to **60 per hour per IP**. A card costs 3–5 calls, so:
+
+1. **Edge cache:** the Vercel function caches successful responses for 5 minutes, so repeat views of a popular card cost nothing. Errors are never cached.
+2. **Browser cache:** `sessionStorage` with a 10-minute expiry, so reopening a card makes 0 requests.
+3. **Visible quota:** the footer shows the requests left this hour.
+4. **Optional token:** setting `GITHUB_TOKEN` on Vercel raises the limit to 5,000/hour. The token stays server-side and never reaches the browser.
+5. **Fallback:** if the proxy isn't there (e.g. `npm run dev` or another host), the app calls GitHub directly.
 
 ### Security
 
-- React escapes all text, so a bio like `<script>…</script>` renders as text. `dangerouslySetInnerHTML` is never used. This is tested with XSS payloads.
-- React does **not** check link protocols, so the "website" field goes through `safeUrl()`, which allows only `http(s)` and blocks `javascript:`.
-- The proxy is **not an open proxy**: it accepts only 3 whitelisted endpoints with a validated username and page number.
+- React escapes all text, so a bio like `<script>…</script>` renders as text. `dangerouslySetInnerHTML` is never used.
+- Links aren't protocol-checked by React, so the website field goes through `safeUrl()`, which allows only `http(s)` and blocks `javascript:`.
+- The proxy is **not an open proxy**: it accepts only 3 whitelisted endpoints, a validated username and a page number from 1 to 10.
 
-## Trade-offs
+## Testing
 
-- **Language share is counted by repo, not bytes.** Byte counts need one extra call per repo, which would burn the rate limit. The GraphQL API would fix this in one request (next step).
-- **Up to 300 repos** are considered, since the REST API can't sort by stars. The card says so when this applies.
-- **Public events only**, and at most the last 90 days / 300 events. Private contributions need GraphQL + a token.
-- **PushEvent commit counts:** GitHub trimmed these payloads in 2025, so the app counts pushes and shows commit counts only when present.
+- **15 unit tests** (`npm test`) cover ranking, language stats, activity bucketing, event grouping, username validation, and the proxy (with `fetch` stubbed).
+- **Real accounts** were checked end to end: torvalds, gaearon, sindresorhus (1,149 repos), vercel (an org), a non-existent user, and a small personal account. This found two real-world issues, both now fixed and tested: GitHub's events feed isn't always in time order, and busy accounts produce long runs of identical events.
+- **Browser checks** covered the 404, rate-limit and invalid-input states, XSS payloads in bio/name, rapid double searches, deep links and the mobile layout.
+
+## Trade-offs & what I'd do next
+
+- **Languages count repos, not bytes.** Byte counts need one extra request per repo, which would burn the rate limit.
+- **Up to 300 repos are ranked.** The REST API can't sort by stars, so for very large accounts the card ranks the 300 most recently updated repos, and says so.
+- **Public activity only**, covering at most the last 90 days.
+- **GitHub removed commit counts from push events** in 2025, so the app counts pushes.
+- **Next step:** move to the **GraphQL API**. One request can return repos sorted by stars, language byte counts and the contribution calendar, which fixes the first three points.
 
 ## Run locally
 
 ```bash
 npm install
-npm run dev        # http://localhost:5173 (calls GitHub directly)
-npx vercel dev     # same, plus the /api proxy
-npm test           # 14 unit tests (Node 22+)
+npm run dev      # http://localhost:5173 (calls GitHub directly)
+npm test         # 15 unit tests (Node 22+)
 npm run lint
+npm run build
 ```
 
 ## Deploy (Vercel)
 
 1. Import the repo on vercel.com. Vite is auto-detected, and `api/github.js` becomes a serverless function.
-2. *(Recommended)* Create a fine-grained GitHub token with public read-only access. Add it as the `GITHUB_TOKEN` environment variable.
-3. Deploy. The footer should show `…/5000 requests left`.
+2. *(Optional)* Add a fine-grained GitHub token (public read-only) as `GITHUB_TOKEN`, then redeploy.
 
 ## Credits
 
-UI components from [Vengeance UI](https://github.com/Ashutoshx7/VengenceUI) (MIT), converted from TSX to JSX with small changes noted at the top of each file.
+UI components from [Vengeance UI](https://github.com/Ashutoshx7/VengenceUI) (MIT licence), converted from TSX to JSX. Small changes are noted at the top of each file.
 
 ## Time taken
 
-~X hours. Breakdown: planning & API exploration, data logic + tests, vanilla prototype, React/Tailwind UI with Vengeance UI, error handling, README.
+~X hours.
